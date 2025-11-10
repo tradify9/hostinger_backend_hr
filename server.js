@@ -1,4 +1,5 @@
- require("dotenv").config();
+cat > server.js << 'EOF'
+require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -44,7 +45,24 @@ app.use("/api/messages", messageRoutes);
 
 // ✅ Root route
 app.get("/", (req, res) => {
-  res.send("🚀 Server is running successfully...");
+  res.json({ 
+    message: "🚀 HR Fintradify Server is running successfully...",
+    domain: "hr.fintradify.com",
+    port: process.env.PORT,
+    environment: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// ✅ Health check route
+app.get("/health", (req, res) => {
+  res.json({ 
+    success: true, 
+    status: "healthy", 
+    app: "HR Fintradify",
+    database: "connected",
+    timestamp: new Date().toISOString()
+  });
 });
 
 // ✅ Handle 404 (Not Found)
@@ -61,5 +79,11 @@ app.use((err, req, res, next) => {
 });
 
 // ✅ Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ HR Fintradify Server running on port ${PORT}`);
+  console.log(`✅ Domain: hr.fintradify.com`);
+  console.log(`✅ Database: ${process.env.DB_NAME}`);
+  console.log(`✅ Environment: ${process.env.NODE_ENV}`);
+});
+EOF
