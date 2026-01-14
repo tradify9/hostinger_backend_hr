@@ -1,4 +1,4 @@
-cat > server.js << 'EOF'
+
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
@@ -86,4 +86,4 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Database: ${process.env.DB_NAME}`);
   console.log(`✅ Environment: ${process.env.NODE_ENV}`);
 });
-EOF
+
