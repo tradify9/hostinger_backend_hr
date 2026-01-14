@@ -452,3 +452,83 @@ exports.getAdminLeaves = async (req, res) => {
     });
   }
 };
+
+/* ========================================================
+   ⚙️ GET SETTINGS (Employee)
+====================================================== */
+exports.getEmployeeSettings = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user?._id || user.role !== "employee") {
+      return res.status(401).json({
+        success: false,
+        allowed: false,
+        msg: "Unauthorized - employee only",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      allowed: true,
+      settings: {
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        address: user.address,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Get Employee Settings Error:", err);
+    return res.status(500).json({
+      success: false,
+      allowed: true,
+      msg: "Server error while fetching settings",
+      error: err.message,
+    });
+  }
+};
+
+/* ========================================================
+   ✏️ UPDATE SETTINGS (Employee)
+====================================================== */
+exports.updateEmployeeSettings = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user?._id || user.role !== "employee") {
+      return res.status(401).json({
+        success: false,
+        allowed: false,
+        msg: "Unauthorized - employee only",
+      });
+    }
+
+    const { name, email, phone, address } = req.body;
+    const updates = {};
+    if (name !== undefined) updates.name = name;
+    if (email !== undefined) updates.email = email;
+    if (phone !== undefined) updates.phone = phone;
+    if (address !== undefined) updates.address = address;
+
+    const updatedUser = await User.findByIdAndUpdate(user._id, updates, { new: true });
+
+    return res.status(200).json({
+      success: true,
+      allowed: true,
+      msg: "Settings updated successfully.",
+      settings: {
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        address: updatedUser.address,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Update Employee Settings Error:", err);
+    return res.status(500).json({
+      success: false,
+      allowed: true,
+      msg: "Server error while updating settings",
+      error: err.message,
+    });
+  }
+};

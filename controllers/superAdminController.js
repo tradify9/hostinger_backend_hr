@@ -1,4 +1,8 @@
 const User = require("../models/User");
+const Task = require("../models/Task");
+const Leave = require("../models/Leave");
+const Message = require("../models/Message");
+const Settings = require("../models/Settings");
 const bcrypt = require("bcryptjs");
 const sendEmail = require("../utils/sendEmail");
 
@@ -334,6 +338,369 @@ exports.getEmployees = async (req, res) => {
     return res.status(500).json({
       success: false,
       msg: "Server error while fetching employees.",
+      error: err.message,
+    });
+  }
+};
+
+/* ======================================================
+   ⚙️ TOGGLE EMPLOYEE STATUS
+====================================================== */
+exports.toggleEmployeeStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isActive } = req.body;
+
+    if (typeof isActive !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        msg: "Invalid or missing 'isActive' value (must be true or false).",
+      });
+    }
+
+    const employee = await User.findOne({ _id: id, role: "employee" });
+    if (!employee) {
+      return res.status(404).json({ success: false, msg: "Employee not found." });
+    }
+
+    employee.isActive = isActive;
+    await employee.save();
+
+    const statusText = isActive ? "enabled" : "disabled";
+
+    return res.status(200).json({
+      success: true,
+      msg: `Employee ${statusText} successfully.`,
+      employee: {
+        _id: employee._id,
+        username: employee.username,
+        email: employee.email,
+        isActive: employee.isActive,
+        role: employee.role,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Toggle Employee Status Error:", err);
+    if (err.name === "CastError") {
+      return res.status(400).json({ success: false, msg: "Invalid Employee ID." });
+    }
+    return res.status(500).json({
+      success: false,
+      msg: "Server error while toggling employee status.",
+      error: err.message,
+    });
+  }
+};
+
+/* ======================================================
+   🗑️ DELETE EMPLOYEE
+====================================================== */
+exports.deleteEmployee = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const employee = await User.findOne({ _id: id, role: "employee" });
+    if (!employee) {
+      return res.status(404).json({ success: false, msg: "Employee not found." });
+    }
+
+    await employee.deleteOne();
+
+    return res.json({ success: true, msg: "Employee deleted successfully." });
+  } catch (err) {
+    console.error("❌ Delete Employee Error:", err);
+    if (err.name === "CastError") {
+      return res.status(400).json({ success: false, msg: "Invalid Employee ID." });
+    }
+    return res.status(500).json({
+      success: false,
+      msg: "Server error while deleting employee.",
+      error: err.message,
+    });
+  }
+};
+
+/* ======================================================
+   📋 GET TASKS
+====================================================== */
+exports.getTasks = async (req, res) => {
+  try {
+    const tasks = await Task.find().populate('assignedTo', 'username email').populate('assignedBy', 'username email');
+    return res.status(200).json({
+      success: true,
+      count: tasks.length,
+      tasks,
+    });
+  } catch (err) {
+    console.error("❌ Get Tasks Error:", err);
+    return res.status(500).json({
+      success: false,
+      msg: "Server error while fetching tasks.",
+      error: err.message,
+    });
+  }
+};
+
+/* ======================================================
+   🗑️ DELETE TASK
+====================================================== */
+exports.deleteTask = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const task = await Task.findById(id);
+    if (!task) {
+      return res.status(404).json({ success: false, msg: "Task not found." });
+    }
+
+    await task.deleteOne();
+
+    return res.json({ success: true, msg: "Task deleted successfully." });
+  } catch (err) {
+    console.error("❌ Delete Task Error:", err);
+    if (err.name === "CastError") {
+      return res.status(400).json({ success: false, msg: "Invalid Task ID." });
+    }
+    return res.status(500).json({
+      success: false,
+      msg: "Server error while deleting task.",
+      error: err.message,
+    });
+  }
+};
+
+/* ======================================================
+   📋 GET LEAVES
+====================================================== */
+exports.getLeaves = async (req, res) => {
+  try {
+    const leaves = await Leave.find().populate('employeeId', 'username email');
+    return res.status(200).json({
+      success: true,
+      count: leaves.length,
+      leaves,
+    });
+  } catch (err) {
+    console.error("❌ Get Leaves Error:", err);
+    return res.status(500).json({
+      success: false,
+      msg: "Server error while fetching leaves.",
+      error: err.message,
+    });
+  }
+};
+
+/* ======================================================
+   ✅ APPROVE LEAVE
+====================================================== */
+exports.approveLeave = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const leave = await Leave.findById(id);
+    if (!leave) {
+      return res.status(404).json({ success: false, msg: "Leave request not found." });
+    }
+
+    leave.status = "approved";
+    await leave.save();
+
+    return res.json({ success: true, msg: "Leave approved successfully.", leave });
+  } catch (err) {
+    console.error("❌ Approve Leave Error:", err);
+    if (err.name === "CastError") {
+      return res.status(400).json({ success: false, msg: "Invalid Leave ID." });
+    }
+    return res.status(500).json({
+      success: false,
+      msg: "Server error while approving leave.",
+      error: err.message,
+    });
+  }
+};
+
+/* ======================================================
+   ❌ REJECT LEAVE
+====================================================== */
+exports.rejectLeave = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const leave = await Leave.findById(id);
+    if (!leave) {
+      return res.status(404).json({ success: false, msg: "Leave request not found." });
+    }
+
+    leave.status = "rejected";
+    await leave.save();
+
+    return res.json({ success: true, msg: "Leave rejected successfully.", leave });
+  } catch (err) {
+    console.error("❌ Reject Leave Error:", err);
+    if (err.name === "CastError") {
+      return res.status(400).json({ success: false, msg: "Invalid Leave ID." });
+    }
+    return res.status(500).json({
+      success: false,
+      msg: "Server error while rejecting leave.",
+      error: err.message,
+    });
+  }
+};
+
+/* ======================================================
+   📋 GET MESSAGES
+====================================================== */
+exports.getMessages = async (req, res) => {
+  try {
+    const messages = await Message.find().populate('senderId', 'username email').populate('receiverId', 'username email');
+    return res.status(200).json({
+      success: true,
+      count: messages.length,
+      messages,
+    });
+  } catch (err) {
+    console.error("❌ Get Messages Error:", err);
+    return res.status(500).json({
+      success: false,
+      msg: "Server error while fetching messages.",
+      error: err.message,
+    });
+  }
+};
+
+/* ======================================================
+   🗑️ DELETE MESSAGE
+====================================================== */
+exports.deleteMessage = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const message = await Message.findById(id);
+    if (!message) {
+      return res.status(404).json({ success: false, msg: "Message not found." });
+    }
+
+    await message.deleteOne();
+
+    return res.json({ success: true, msg: "Message deleted successfully." });
+  } catch (err) {
+    console.error("❌ Delete Message Error:", err);
+    if (err.name === "CastError") {
+      return res.status(400).json({ success: false, msg: "Invalid Message ID." });
+    }
+    return res.status(500).json({
+      success: false,
+      msg: "Server error while deleting message.",
+      error: err.message,
+    });
+  }
+};
+
+/* ======================================================
+   📊 GET REPORTS
+====================================================== */
+exports.getReports = async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const totalAdmins = await User.countDocuments({ role: "admin" });
+    const totalEmployees = await User.countDocuments({ role: "employee" });
+    const totalTasks = await Task.countDocuments();
+    const totalLeaves = await Leave.countDocuments();
+    const totalMessages = await Message.countDocuments();
+    const activeUsers = await User.countDocuments({ isActive: true });
+    const completedTasks = await Task.countDocuments({ status: "completed" });
+    const pendingLeaves = await Leave.countDocuments({ status: "pending" });
+
+    return res.status(200).json({
+      success: true,
+      reports: {
+        totalUsers,
+        totalAdmins,
+        totalEmployees,
+        totalTasks,
+        totalLeaves,
+        totalMessages,
+        activeUsers,
+        completedTasks,
+        pendingLeaves,
+      }
+    });
+  } catch (err) {
+    console.error("❌ Get Reports Error:", err);
+    return res.status(500).json({
+      success: false,
+      msg: "Server error while fetching reports.",
+      error: err.message,
+    });
+  }
+};
+
+/* ======================================================
+   📥 DOWNLOAD REPORT
+====================================================== */
+exports.downloadReport = async (req, res) => {
+  try {
+    // This would generate a PDF report - for now just return JSON
+    const reports = await exports.getReports(req, res);
+    // Note: getReports already sends response, so we don't send again
+  } catch (err) {
+    console.error("❌ Download Report Error:", err);
+    return res.status(500).json({
+      success: false,
+      msg: "Server error while downloading report.",
+      error: err.message,
+    });
+  }
+};
+
+/* ======================================================
+   ⚙️ GET SETTINGS
+====================================================== */
+exports.getSettings = async (req, res) => {
+  try {
+    let settings = await Settings.findOne();
+    if (!settings) {
+      settings = new Settings();
+      await settings.save();
+    }
+    return res.status(200).json({
+      success: true,
+      settings,
+    });
+  } catch (err) {
+    console.error("❌ Get Settings Error:", err);
+    return res.status(500).json({
+      success: false,
+      msg: "Server error while fetching settings.",
+      error: err.message,
+    });
+  }
+};
+
+/* ======================================================
+   ✏️ UPDATE SETTINGS
+====================================================== */
+exports.updateSettings = async (req, res) => {
+  try {
+    const updates = req.body;
+    let settings = await Settings.findOne();
+    if (!settings) {
+      settings = new Settings(updates);
+    } else {
+      Object.assign(settings, updates);
+    }
+    await settings.save();
+    return res.status(200).json({
+      success: true,
+      msg: "Settings updated successfully.",
+      settings,
+    });
+  } catch (err) {
+    console.error("❌ Update Settings Error:", err);
+    return res.status(500).json({
+      success: false,
+      msg: "Server error while updating settings.",
       error: err.message,
     });
   }

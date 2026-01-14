@@ -1,4 +1,3 @@
-cat > server.js << 'EOF'
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
@@ -45,7 +44,7 @@ app.use("/api/messages", messageRoutes);
 
 // ✅ Root route
 app.get("/", (req, res) => {
-  res.json({ 
+  res.json({
     message: "🚀 HR Fintradify Server is running successfully...",
     domain: "hr.fintradify.com",
     port: process.env.PORT,
@@ -56,9 +55,9 @@ app.get("/", (req, res) => {
 
 // ✅ Health check route
 app.get("/health", (req, res) => {
-  res.json({ 
-    success: true, 
-    status: "healthy", 
+  res.json({
+    success: true,
+    status: "healthy",
     app: "HR Fintradify",
     database: "connected",
     timestamp: new Date().toISOString()
@@ -79,11 +78,10 @@ app.use((err, req, res, next) => {
 });
 
 // ✅ Start server
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ HR Fintradify Server running on port ${PORT}`);
   console.log(`✅ Domain: hr.fintradify.com`);
   console.log(`✅ Database: ${process.env.DB_NAME}`);
   console.log(`✅ Environment: ${process.env.NODE_ENV}`);
 });
-EOF

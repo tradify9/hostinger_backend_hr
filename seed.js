@@ -32,12 +32,12 @@ const seedSuperAdmin = async () => {
 
     // ✅ Create new Super Admin
     const superAdmin = new User({
-      username: "superadmin",
-      email: "superadmin@example.com",
-      name: "System Super Admin",
-      password: "superadmin123",
+      username: "hrsuperadmin",
+      email: "hr@fintradify.com",
+      name: "Fintradify Super Admin",
+      password: "admin1234",
       role: "superadmin",
-      employeeId: "ADM001",
+      employeeId: "TRD001",
     });
 
     await superAdmin.save();
