@@ -126,7 +126,7 @@ router.put("/me", protect(["employee"]), async (req, res) => {
 
     let imageUrl = null;
     if (user.image) {
-      imageUrl = `/uploads/${path.basename(user.image)}`;
+      imageUrl = user.image; // Cloudinary URL
     }
 
     const payload = {

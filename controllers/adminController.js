@@ -67,7 +67,7 @@ exports.createEmployee = async (req, res) => {
     // -------------------- Handle Uploaded Image --------------------
     let imagePath = null;
     if (req.file) {
-      imagePath = `/uploads/${req.file.filename}`;
+      imagePath = req.file.path; // Cloudinary URL
     }
 
     // -------------------- Create Employee --------------------
