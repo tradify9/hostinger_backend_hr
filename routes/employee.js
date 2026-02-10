@@ -109,9 +109,9 @@ router.get("/me", protect(["employee"]), async (req, res) => {
  */
 router.put("/me", protect(["employee"]), upload.single("image"), async (req, res) => {
   try {
-    const { phone, address, accountNumber, bankName } = req.body;
+    const { name, email, phone, address, accountNumber, bankName } = req.body;
 
-    const updateData = { phone, address, accountNumber, bankName };
+    const updateData = { name, email, phone, address, accountNumber, bankName };
 
     // Handle image upload
     if (req.file) {
