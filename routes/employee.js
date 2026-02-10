@@ -10,7 +10,7 @@ const {
 } = require("../controllers/employeeController");
 const protect = require("../middleware/authMiddleware");
 const User = require("../models/User");
-
+const upload = require("../middleware/upload");
 
 const path = require("path");
 
@@ -107,13 +107,20 @@ router.get("/me", protect(["employee"]), async (req, res) => {
  * Update Employee Profile
  * ===========================
  */
-router.put("/me", protect(["employee"]), async (req, res) => {
+router.put("/me", protect(["employee"]), upload.single("image"), async (req, res) => {
   try {
     const { phone, address } = req.body;
 
+    const updateData = { phone, address };
+
+    // Handle image upload
+    if (req.file) {
+      updateData.image = req.file.path; // Cloudinary URL
+    }
+
     const user = await User.findByIdAndUpdate(
       req.user._id,
-      { phone, address },
+      updateData,
       { new: true, select: "-password -__v" }
     );
 
