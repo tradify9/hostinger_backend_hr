@@ -16,6 +16,8 @@ const userSchema = new mongoose.Schema(
     image: { type: String, default: null },
     phone: { type: String, default: "" },
     address: { type: String, default: "" },
+    accountNumber: { type: String, default: "" },
+    bankName: { type: String, default: "" },
     role: { type: String, enum: ["superadmin","admin","employee"], default: "employee" },
     adminId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
     isActive: { type: Boolean, default: true },

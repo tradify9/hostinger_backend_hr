@@ -24,7 +24,10 @@ const taskRoutes = require("./routes/taskRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 
 // ✅ Middlewares
-app.use(cors());
+app.use(cors({
+  origin: true, // Allow all origins
+  credentials: true
+}));
 app.use(express.json());
 app.use(morgan("dev"));
 
