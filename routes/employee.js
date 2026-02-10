@@ -73,7 +73,12 @@ router.get("/me", protect(["employee"]), async (req, res) => {
 
     let imageUrl = null;
     if (user.image) {
-      imageUrl = `/uploads/${path.basename(user.image)}`;
+      // If it's a full URL (Cloudinary), use it directly; else, assume local path
+      if (user.image.startsWith('http')) {
+        imageUrl = user.image;
+      } else {
+        imageUrl = `/uploads/${path.basename(user.image)}`;
+      }
       console.log("✅ Final imageUrl returned:", imageUrl);
     }
 
