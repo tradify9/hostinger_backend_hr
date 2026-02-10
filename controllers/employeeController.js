@@ -41,7 +41,7 @@ exports.punchIn = async (req, res) => {
       });
     }
 
-    // Create new Punch In record (location optional) - address will be geocoded later when fetching attendance
+    // Create new Punch In record (location optional)
     const attendance = await Attendance.create({
       userId,
       punchIn: now,
@@ -49,8 +49,22 @@ exports.punchIn = async (req, res) => {
         latitude: latitude ?? null,
         longitude: longitude ?? null,
       },
-      punchInAddress: null, // Will be populated when fetching attendance
+      punchInAddress: null,
     });
+
+    // Geocode address if location provided
+    if (latitude && longitude) {
+      try {
+        const geoResult = await geocoderInstance.reverse({ lat: latitude, lon: longitude });
+        if (geoResult && geoResult.length > 0) {
+          attendance.punchInAddress = geoResult[0].formattedAddress;
+          await attendance.save();
+        }
+      } catch (geoErr) {
+        console.warn("Geocoding failed for punch in:", geoErr.message);
+        // Continue without address
+      }
+    }
 
     return res.status(201).json({
       success: true,
@@ -112,13 +126,26 @@ exports.punchOut = async (req, res) => {
       });
     }
 
-    // Set punch-out time and location - address will be geocoded later when fetching attendance
+    // Set punch-out time and location
     record.punchOut = now;
     record.punchOutLocation = {
       latitude: latitude ?? null,
       longitude: longitude ?? null,
     };
-    record.punchOutAddress = null; // Will be populated when fetching attendance
+    record.punchOutAddress = null;
+
+    // Geocode address if location provided
+    if (latitude && longitude) {
+      try {
+        const geoResult = await geocoderInstance.reverse({ lat: latitude, lon: longitude });
+        if (geoResult && geoResult.length > 0) {
+          record.punchOutAddress = geoResult[0].formattedAddress;
+        }
+      } catch (geoErr) {
+        console.warn("Geocoding failed for punch out:", geoErr.message);
+        // Continue without address
+      }
+    }
 
     await record.save();
 
@@ -187,11 +214,11 @@ exports.getAttendance = async (req, res) => {
         .sort({ punchIn: -1 })
         .lean();
 
-      // Skip geocoding to avoid API rate limits and timeouts - just return coordinates
+      // Return addresses if available, otherwise coordinates
       records = records.map((record) => ({
         ...record,
-        punchInAddress: record.punchInAddress || `${record.punchInLocation?.latitude || 'N/A'}, ${record.punchInLocation?.longitude || 'N/A'}`,
-        punchOutAddress: record.punchOutAddress || `${record.punchOutLocation?.latitude || 'N/A'}, ${record.punchOutLocation?.longitude || 'N/A'}`,
+        punchInAddress: record.punchInAddress || (record.punchInLocation?.latitude && record.punchInLocation?.longitude ? `${record.punchInLocation.latitude}, ${record.punchInLocation.longitude}` : 'Location not available'),
+        punchOutAddress: record.punchOutAddress || (record.punchOutLocation?.latitude && record.punchOutLocation?.longitude ? `${record.punchOutLocation.latitude}, ${record.punchOutLocation.longitude}` : 'Location not available'),
       }));
     }
 
