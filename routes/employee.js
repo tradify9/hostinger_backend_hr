@@ -2,6 +2,7 @@ const express = require("express");
 const {
   punchIn,
   punchOut,
+  autoPunchOut,
   requestLeave,
   requestTask,
   getLeaves,

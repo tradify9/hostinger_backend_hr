@@ -4,6 +4,48 @@ const Task = require("../models/Task");
 const User = require("../models/User");
 const geocoder = require('node-geocoder');
 
+// ✅ Auto Punch Out Function
+exports.autoPunchOut = async (req, res) => {
+  try {
+    const { recordId } = req.body;
+    const userId = req.user._id;
+
+    // Find the attendance record
+    const attendanceRecord = await Attendance.findOne({
+      _id: recordId,
+      userId: userId,
+      punchOut: { $exists: false }
+    });
+
+    if (!attendanceRecord) {
+      return res.status(404).json({
+        success: false,
+        msg: "Attendance record not found or already punched out"
+      });
+    }
+
+    // Auto punch out with current time
+    attendanceRecord.punchOut = new Date();
+    await attendanceRecord.save();
+
+    console.log(`✅ Auto punched out for user ${userId} on ${attendanceRecord.punchOut}`);
+
+    return res.json({
+      success: true,
+      msg: "Auto punch out successful",
+      attendance: attendanceRecord
+    });
+
+  } catch (err) {
+    console.error("❌ Auto Punch Out Error:", err.message);
+    return res.status(500).json({
+      success: false,
+      msg: "Server error during auto punch out",
+      error: err.message
+    });
+  }
+};
+
 const geocoderInstance = geocoder({
   provider: 'openstreetmap',
   timeout: 10000, // 10 second timeout
