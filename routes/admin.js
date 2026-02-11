@@ -19,6 +19,8 @@ const {
   getAllMessages,
   updateMessageStatus,
   downloadAttendanceCSV,
+  getSettings,
+  updateSettings,
 } = require("../controllers/adminController");
 
 const router = express.Router();

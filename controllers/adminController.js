@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const Leave = require("../models/Leave");
+const Settings = require("../models/Settings");
 const bcrypt = require("bcryptjs");
 const sendEmail = require("../utils/sendEmail");
 const mongoose = require("mongoose");
@@ -808,6 +809,51 @@ exports.downloadAttendanceCSV = async (req, res) => {
     res.send(csvContent);
   } catch (err) {
     console.error("❌ Download Attendance CSV Error:", err.message);
+    res.status(500).json({ success: false, msg: "Server error", error: err.message });
+  }
+};
+
+// ============================================
+// ✅ Admin: Get Settings
+// ============================================
+exports.getSettings = async (req, res) => {
+  try {
+    const settings = await Settings.findOne({ adminId: req.user._id });
+    res.json({ success: true, settings: settings || {} });
+  } catch (err) {
+    console.error("❌ Get Settings Error:", err.message);
+    res.status(500).json({ success: false, msg: "Server error", error: err.message });
+  }
+};
+
+// ============================================
+// ✅ Admin: Update Settings
+// ============================================
+exports.updateSettings = async (req, res) => {
+  try {
+    const { companyName, companyAddress, companyPhone, companyEmail, slipFormat } = req.body;
+    let companyLogo = null;
+
+    if (req.file) {
+      companyLogo = req.file.path; // Assuming multer is used for file upload
+    }
+
+    const settings = await Settings.findOneAndUpdate(
+      { adminId: req.user._id },
+      {
+        companyName,
+        companyAddress,
+        companyPhone,
+        companyEmail,
+        companyLogo,
+        slipFormat,
+      },
+      { new: true, upsert: true }
+    );
+
+    res.json({ success: true, msg: "Settings updated successfully", settings });
+  } catch (err) {
+    console.error("❌ Update Settings Error:", err.message);
     res.status(500).json({ success: false, msg: "Server error", error: err.message });
   }
 };
