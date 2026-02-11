@@ -22,6 +22,9 @@ const adminRoutes = require("./routes/admin");
 const employeeRoutes = require("./routes/employee");
 const taskRoutes = require("./routes/taskRoutes");
 const messageRoutes = require("./routes/messageRoutes");
+const reimbursementRoutes = require("./routes/reimbursement");
+const reportRoutes = require("./routes/report");
+const teamActiveRoutes = require("./routes/teamactive");
 
 // ✅ Middlewares
 app.use(cors({
@@ -52,6 +55,9 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/employee", employeeRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/employee/reimbursements", reimbursementRoutes);
+app.use("/api/employee/reports", reportRoutes);
+app.use("/api/employee/team-active", teamActiveRoutes);
 
 // ✅ Root route
 app.get("/", (req, res) => {

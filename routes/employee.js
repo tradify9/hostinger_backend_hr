@@ -8,6 +8,11 @@ const {
   getLeaves,
   getAttendance,
   reverseGeocode,
+  requestReimbursement,
+  getReimbursements,
+  submitReport,
+  getReports,
+  getTeamActive,
     // ✅ नया salary slip controller
 } = require("../controllers/employeeController");
 const protect = require("../middleware/authMiddleware");
@@ -202,6 +207,29 @@ router.get("/messages", protect(["employee"]), async (req, res) => {
     res.status(500).json({ success: false, msg: "Server error", error: err.message });
   }
 });
+
+/**
+ * ===========================
+ * Reimbursement Routes
+ * ===========================
+ */
+router.post("/reimbursements", protect(["employee"]), requestReimbursement);
+router.get("/reimbursements", protect(["employee"]), getReimbursements);
+
+/**
+ * ===========================
+ * Report Routes
+ * ===========================
+ */
+router.post("/reports", protect(["employee"]), submitReport);
+router.get("/reports", protect(["employee"]), getReports);
+
+/**
+ * ===========================
+ * Team Active Route
+ * ===========================
+ */
+router.get("/team-active", protect(["employee"]), getTeamActive);
 
 /**
  * ===========================

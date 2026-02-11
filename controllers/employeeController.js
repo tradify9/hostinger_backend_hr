@@ -603,6 +603,256 @@ exports.updateEmployeeSettings = async (req, res) => {
 };
 
 /* ========================================================
+   💰 REQUEST REIMBURSEMENT (Employee)
+====================================================== */
+exports.requestReimbursement = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user?._id || user.role !== "employee") {
+      return res.status(401).json({
+        success: false,
+        allowed: false,
+        msg: "Unauthorized - employee only",
+      });
+    }
+
+    const { amount, description, category } = req.body;
+
+    if (!amount || !description?.trim()) {
+      return res.status(400).json({
+        success: false,
+        allowed: true,
+        msg: "Amount and description are required",
+      });
+    }
+
+    if (amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        allowed: true,
+        msg: "Amount must be greater than zero",
+      });
+    }
+
+    if (!user.adminId) {
+      return res.status(400).json({
+        success: false,
+        allowed: true,
+        msg: "Employee is not linked to any admin",
+      });
+    }
+
+    const reimbursement = await Reimbursement.create({
+      employeeId: user._id,
+      adminId: user.adminId,
+      amount: parseFloat(amount),
+      description: description.trim(),
+      category: category || "Other",
+      status: "Pending",
+    });
+
+    return res.status(201).json({
+      success: true,
+      allowed: true,
+      msg: "✅ Reimbursement request submitted successfully",
+      reimbursement,
+    });
+  } catch (err) {
+    console.error("❌ Request Reimbursement Error:", err);
+    return res.status(500).json({
+      success: false,
+      allowed: true,
+      msg: "Server error while requesting reimbursement",
+      error: err.message,
+    });
+  }
+};
+
+/* ========================================================
+   📋 GET REIMBURSEMENTS (Employee)
+====================================================== */
+exports.getReimbursements = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user?._id || user.role !== "employee") {
+      return res.status(401).json({
+        success: false,
+        allowed: false,
+        msg: "Unauthorized - employee only",
+      });
+    }
+
+    const reimbursements = await Reimbursement.find({ employeeId: user._id })
+      .sort({ submittedAt: -1 })
+      .lean();
+
+    return res.json({
+      success: true,
+      allowed: true,
+      count: reimbursements.length,
+      reimbursements,
+    });
+  } catch (err) {
+    console.error("❌ Get Reimbursements Error:", err);
+    return res.status(500).json({
+      success: false,
+      allowed: true,
+      msg: "Server error while fetching reimbursements",
+      error: err.message,
+    });
+  }
+};
+
+/* ========================================================
+   📝 SUBMIT REPORT (Employee)
+====================================================== */
+exports.submitReport = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user?._id || user.role !== "employee") {
+      return res.status(401).json({
+        success: false,
+        allowed: false,
+        msg: "Unauthorized - employee only",
+      });
+    }
+
+    const { title, description, type } = req.body;
+
+    if (!title?.trim() || !description?.trim()) {
+      return res.status(400).json({
+        success: false,
+        allowed: true,
+        msg: "Title and description are required",
+      });
+    }
+
+    if (!user.adminId) {
+      return res.status(400).json({
+        success: false,
+        allowed: true,
+        msg: "Employee is not linked to any admin",
+      });
+    }
+
+    const report = await Report.create({
+      employeeId: user._id,
+      adminId: user.adminId,
+      title: title.trim(),
+      description: description.trim(),
+      type: type || "Other",
+      status: "Submitted",
+    });
+
+    return res.status(201).json({
+      success: true,
+      allowed: true,
+      msg: "✅ Report submitted successfully",
+      report,
+    });
+  } catch (err) {
+    console.error("❌ Submit Report Error:", err);
+    return res.status(500).json({
+      success: false,
+      allowed: true,
+      msg: "Server error while submitting report",
+      error: err.message,
+    });
+  }
+};
+
+/* ========================================================
+   📋 GET REPORTS (Employee)
+====================================================== */
+exports.getReports = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user?._id || user.role !== "employee") {
+      return res.status(401).json({
+        success: false,
+        allowed: false,
+        msg: "Unauthorized - employee only",
+      });
+    }
+
+    const reports = await Report.find({ employeeId: user._id })
+      .sort({ submittedAt: -1 })
+      .lean();
+
+    return res.json({
+      success: true,
+      allowed: true,
+      count: reports.length,
+      reports,
+    });
+  } catch (err) {
+    console.error("❌ Get Reports Error:", err);
+    return res.status(500).json({
+      success: false,
+      allowed: true,
+      msg: "Server error while fetching reports",
+      error: err.message,
+    });
+  }
+};
+
+/* ========================================================
+   👥 GET TEAM ACTIVE (Employee)
+====================================================== */
+exports.getTeamActive = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user?._id || user.role !== "employee") {
+      return res.status(401).json({
+        success: false,
+        allowed: false,
+        msg: "Unauthorized - employee only",
+      });
+    }
+
+    if (!user.adminId) {
+      return res.status(400).json({
+        success: false,
+        allowed: true,
+        msg: "Employee is not linked to any admin",
+      });
+    }
+
+    // Get team members under the same admin
+    const teamMembers = await User.find({
+      adminId: user.adminId,
+      role: "employee",
+      _id: { $ne: user._id }, // Exclude self
+    }).select("_id name");
+
+    // Get recent activities for team members
+    const teamActivities = await TeamActive.find({
+      employeeId: { $in: teamMembers.map(m => m._id) },
+    })
+      .populate("employeeId", "name")
+      .sort({ timestamp: -1 })
+      .limit(50) // Limit to recent 50 activities
+      .lean();
+
+    return res.json({
+      success: true,
+      allowed: true,
+      count: teamActivities.length,
+      teamActivities,
+      teamMembers: teamMembers.map(m => ({ _id: m._id, name: m.name })),
+    });
+  } catch (err) {
+    console.error("❌ Get Team Active Error:", err);
+    return res.status(500).json({
+      success: false,
+      allowed: true,
+      msg: "Server error while fetching team activities",
+      error: err.message,
+    });
+  }
+};
+
+/* ========================================================
    🗺️ REVERSE GEOCODE (Convert Lat/Lon to Address)
 ====================================================== */
 exports.reverseGeocode = async (req, res) => {
