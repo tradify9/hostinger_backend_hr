@@ -559,3 +559,41 @@ exports.updateEmployeeSettings = async (req, res) => {
     });
   }
 };
+
+/* ========================================================
+   🗺️ REVERSE GEOCODE (Convert Lat/Lon to Address)
+====================================================== */
+exports.reverseGeocode = async (req, res) => {
+  try {
+    const { latitude, longitude } = req.body;
+
+    if (!latitude || !longitude) {
+      return res.status(400).json({
+        success: false,
+        msg: "Latitude and longitude are required",
+      });
+    }
+
+    const geoResult = await geocoderInstance.reverse({ lat: latitude, lon: longitude });
+
+    if (geoResult && geoResult.length > 0) {
+      return res.status(200).json({
+        success: true,
+        address: geoResult[0].formattedAddress,
+        details: geoResult[0],
+      });
+    } else {
+      return res.status(404).json({
+        success: false,
+        msg: "Address not found for the given coordinates",
+      });
+    }
+  } catch (err) {
+    console.error("❌ Reverse Geocode Error:", err);
+    return res.status(500).json({
+      success: false,
+      msg: "Server error while reverse geocoding",
+      error: err.message,
+    });
+  }
+};

@@ -6,6 +6,7 @@ const {
   requestTask,
   getLeaves,
   getAttendance,
+  reverseGeocode,
     // ✅ नया salary slip controller
 } = require("../controllers/employeeController");
 const protect = require("../middleware/authMiddleware");
@@ -200,6 +201,13 @@ router.get("/messages", protect(["employee"]), async (req, res) => {
     res.status(500).json({ success: false, msg: "Server error", error: err.message });
   }
 });
+
+/**
+ * ===========================
+ * Reverse Geocode Route
+ * ===========================
+ */
+router.post("/reverse-geocode", protect(["employee"]), reverseGeocode);
 
 
 
