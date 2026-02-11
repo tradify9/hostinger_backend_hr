@@ -55,9 +55,6 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/employee", employeeRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/messages", messageRoutes);
-app.use("/api/employee/reimbursements", reimbursementRoutes);
-app.use("/api/employee/reports", reportRoutes);
-app.use("/api/employee/team-active", teamActiveRoutes);
 
 // ✅ Root route
 app.get("/", (req, res) => {
