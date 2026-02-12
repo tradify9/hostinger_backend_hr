@@ -27,6 +27,10 @@ const reimbursementRoutes = require("./routes/reimbursement");
 const reportRoutes = require("./routes/report");
 const teamActiveRoutes = require("./routes/teamactive");
 
+// ✅ Import Controllers and Middleware for direct routes
+const { getAttendance } = require("./controllers/employeeController");
+const protect = require("./middleware/authMiddleware");
+
 // ✅ Middlewares
 app.use(cors({
   origin: true, // Allow all origins
@@ -78,4 +82,3 @@ app.use((err, req, res, next) => {
 
 // ✅ Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

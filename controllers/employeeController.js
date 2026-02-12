@@ -6,6 +6,7 @@ const Reimbursement = require("../models/Reimbursement");
 const Report = require("../models/Report");
 const TeamActive = require("../models/TeamActive");
 const geocoder = require('node-geocoder');
+const { quicksort, HashMap, ArrayOps } = require("../utils/dsa");
 
 // ✅ Auto Punch Out Function
 exports.autoPunchOut = async (req, res) => {
@@ -259,6 +260,10 @@ exports.getAttendance = async (req, res) => {
         .sort({ punchIn: -1 })
         .lean();
 
+      // Use quicksort to sort records by punchIn date (descending)
+      const sortedRecords = quicksort(records.map(r => new Date(r.punchIn).getTime()));
+      records = sortedRecords.reverse().map(timestamp => records.find(r => new Date(r.punchIn).getTime() === timestamp));
+
       // Return addresses if available, otherwise coordinates
       records = records.map((record) => ({
         ...record,
@@ -507,6 +512,10 @@ exports.getAdminLeaves = async (req, res) => {
       .populate("adminId", "username email company")
       .sort({ createdAt: -1 })
       .lean();
+
+    // Use quicksort to sort leaves by startDate (ascending)
+    const sortedLeaves = quicksort(leaves.map(l => new Date(l.startDate).getTime()));
+    leaves = sortedLeaves.map(timestamp => leaves.find(l => new Date(l.startDate).getTime() === timestamp));
 
     return res.status(200).json({
       success: true,
