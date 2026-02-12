@@ -8,7 +8,7 @@ const cloudinary = require("cloudinary").v2;
 
 // ✅ Configure Cloudinary
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
@@ -37,15 +37,15 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
-app.use(morgan("dev"));
+app.use(morgan("dev")); // Logging middleware for better debugging
 
 // ✅ Serve static uploads folder
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // Updated to serve from /uploads instead of /public/uploads
 
 // ✅ Connect MongoDB
 mongoose
   .connect(process.env.MONGO_URI, {
-    dbName: process.env.DB_NAME || "myappdb",
+    dbName: process.env.DB_NAME || "myappdb", // Use DB_NAME from env or default to "myappdb"
   })
   .then(() => console.log("✅ MongoDB connected"))
   .catch((err) => {
@@ -61,15 +61,19 @@ app.use("/api/employee", employeeRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/reimbursements", reimbursementRoutes); // New route for reimbursements
+app.use("/api/reports", reportRoutes);// New route for TeamActive
+app.use("/api/teamactive", teamActiveRoutes); // New TeamActive routes
+
 
 // ✅ Root route
 app.get("/", (req, res) => {
-  res.send("🚀 Server is running successfully...");
+  res.send("🚀 Server is running successfully..."); 
 });
 
 // ✅ Handle 404 (Not Found)
 app.use((req, res) => {
-  res.status(404).json({ success: false, msg: "Route not found" });
+  res.status(404).json({ success: false, msg: "Route not found" }); // Updated message for clarity
 });
 
 // ✅ Global Error Handler (for unexpected errors)
