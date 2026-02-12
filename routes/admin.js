@@ -122,6 +122,14 @@ router.get("/attendance/csv", downloadAttendanceCSV); // 👈 Download attendanc
 
 /**
  * ==========================
+ * Settings Management
+ * ==========================
+ */
+router.get("/settings", getSettings);
+router.put("/settings", updateSettings);
+
+/**
+ * ==========================
  * Attendance Overview
  * ==========================
  */
