@@ -22,6 +22,7 @@ const adminRoutes = require("./routes/admin");
 const employeeRoutes = require("./routes/employee");
 const taskRoutes = require("./routes/taskRoutes");
 const messageRoutes = require("./routes/messageRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 const reimbursementRoutes = require("./routes/reimbursement");
 const reportRoutes = require("./routes/report");
 const teamActiveRoutes = require("./routes/teamactive");
@@ -55,6 +56,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/employee", employeeRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // ✅ Root route
 app.get("/", (req, res) => {
