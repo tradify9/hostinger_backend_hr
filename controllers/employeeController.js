@@ -6,6 +6,7 @@ const Reimbursement = require("../models/Reimbursement");
 const Report = require("../models/Report");
 const TeamActive = require("../models/TeamActive");
 const geocoder = require('node-geocoder');
+const { Parser } = require('json2csv');
 const { quicksort, HashMap, ArrayOps } = require("../utils/dsa");
 
 // ✅ Auto Punch Out Function
@@ -859,6 +860,95 @@ exports.getTeamActive = async (req, res) => {
       success: false,
       allowed: true,
       msg: "Server error while fetching team activities",
+      error: err.message,
+    });
+  }
+};
+
+/* ========================================================
+   📊 DOWNLOAD ATTENDANCE CSV (Employee)
+====================================================== */
+exports.downloadAttendanceCSV = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ success: false, msg: "Unauthorized - user not found" });
+    }
+
+    // Get attendance records for the employee
+    const records = await Attendance.find({ userId })
+      .sort({ punchIn: -1 })
+      .lean();
+
+    if (!records || records.length === 0) {
+      return res.status(404).json({
+        success: false,
+        msg: "No attendance records found"
+      });
+    }
+
+    // Format data for CSV
+    const csvData = records.map((record, index) => ({
+      'S.No': index + 1,
+      'Date': new Date(record.punchIn).toLocaleDateString('en-IN'),
+      'Day': new Date(record.punchIn).toLocaleDateString('en-IN', { weekday: 'long' }),
+      'Punch In Time': record.punchIn ? new Date(record.punchIn).toLocaleTimeString('en-IN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      }) : 'N/A',
+      'Punch In Location': record.punchInAddress || (record.punchInLocation?.latitude && record.punchInLocation?.longitude
+        ? `${record.punchInLocation.latitude}, ${record.punchInLocation.longitude}`
+        : 'Location not available'),
+      'Punch Out Time': record.punchOut ? new Date(record.punchOut).toLocaleTimeString('en-IN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      }) : 'Not punched out',
+      'Punch Out Location': record.punchOutAddress || (record.punchOutLocation?.latitude && record.punchOutLocation?.longitude
+        ? `${record.punchOutLocation.latitude}, ${record.punchOutLocation.longitude}`
+        : 'Location not available'),
+      'Total Hours': record.punchIn && record.punchOut
+        ? (() => {
+            const diffMs = new Date(record.punchOut) - new Date(record.punchIn);
+            const hours = Math.floor(diffMs / (1000 * 60 * 60));
+            const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            return `${hours}h ${minutes}m`;
+          })()
+        : 'N/A'
+    }));
+
+    // Define CSV fields
+    const fields = [
+      'S.No',
+      'Date',
+      'Day',
+      'Punch In Time',
+      'Punch In Location',
+      'Punch Out Time',
+      'Punch Out Location',
+      'Total Hours'
+    ];
+
+    // Create CSV parser
+    const json2csvParser = new Parser({ fields });
+    const csv = json2csvParser.parse(csvData);
+
+    // Set response headers for CSV download
+    const filename = `attendance_${new Date().toISOString().split('T')[0]}.csv`;
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    // Send CSV data
+    res.status(200).send(csv);
+
+  } catch (err) {
+    console.error("❌ Download Attendance CSV Error:", err);
+    return res.status(500).json({
+      success: false,
+      msg: "Server error while generating CSV",
       error: err.message,
     });
   }

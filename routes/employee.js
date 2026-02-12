@@ -7,6 +7,7 @@ const {
   requestTask,
   getLeaves,
   getAttendance,
+  downloadAttendanceCSV,
   reverseGeocode,
   requestReimbursement,
   getReimbursements,
@@ -177,6 +178,7 @@ router.post("/punch-in", protect(["employee"]), punchIn);
 router.post("/punch-out", protect(["employee"]), punchOut);
 router.post("/auto-punch-out", protect(["employee"]), autoPunchOut);
 router.get("/attendance", protect(["employee", "admin"]), getAttendance);
+router.get("/attendance/csv", protect(["employee"]), downloadAttendanceCSV);
 
 /**
  * ===========================
