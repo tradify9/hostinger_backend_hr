@@ -6,9 +6,15 @@ const path = require("path");
 const morgan = require("morgan");
 const cloudinary = require("cloudinary").v2;
 
+// ✅ Set default JWT_SECRET if not provided
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = "default_jwt_secret_for_development";
+  console.log("⚠️ Using default JWT_SECRET. Please set JWT_SECRET in .env for production.");
+}
+
 // ✅ Configure Cloudinary
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
@@ -50,7 +56,7 @@ mongoose
   .then(() => console.log("✅ MongoDB connected"))
   .catch((err) => {
     console.error("❌ MongoDB connection error:", err.message);
-    process.exit(1); // stop server if DB fails
+    console.log("⚠️ Server will continue without DB connection. Some features may not work.");
   });
 
 // ✅ API Routes
