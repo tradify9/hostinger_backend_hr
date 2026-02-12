@@ -5,7 +5,7 @@ const User = require("../models/User");
 exports.sendNotification = async (req, res) => {
   try {
     const { recipientId, recipientName, subject, message, type } = req.body;
-    const senderId = req.user.id; // From auth middleware
+    const senderId = req.user._id; // From auth middleware
     const senderName = req.user.name || "Admin";
 
     if (!recipientId || !recipientName || !subject || !message) {
